@@ -15,7 +15,7 @@ class CanWashMyCar extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Cake',
+      title: 'Can i wash my car?',
       theme: ThemeData(
         primaryColorDark: Color(0xFF18171f),
         accentColor: Color(0xFFfff200),
