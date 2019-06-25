@@ -1,5 +1,10 @@
+import 'package:canwashmycar/models/weatherData.dart';
+import 'package:canwashmycar/util/service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   @override
@@ -7,6 +12,55 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+bool isLoading = false;
+Location _location = new Location();
+WeatherData weatherData;
+
+ String error;
+
+loadWeather() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    Map<String, double> location;
+
+    try {
+      location = (await _location.getLocation) as Map<String, double>;
+
+      error = null;
+    } catch (e) {
+      if (e.code == 'PERMISSION_DENIED') {
+        error = 'Permission denied';
+      } else if (e.code == 'PERMISSION_DENIED_NEVER_ASK') {
+        error = 'Permission denied - please ask the user to enable it from the app settings';
+      }
+
+      location = null;
+    }
+
+    if (location != null) {
+      final lat = location['latitude'];
+      final lon = location['longitude'];
+
+      final weatherResponse =  await http.get(
+          'https://api.openweathermap.org/data/2.5/weather?APPID=2ac4a2730c64fcd2dd7cec483c2d54d8&lat=$lat&lon=$lon');
+
+      if (weatherResponse.statusCode == 200) {
+        return setState(() {
+          weatherData = new WeatherData.fromJson(jsonDecode(weatherResponse.body));
+         
+          isLoading = false;
+        });
+      }
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -15,7 +69,8 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           elevation: 0.0,
           backgroundColor: Theme.of(context).primaryColorDark,
-          title: Column(
+          title: Center(
+            child:Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
@@ -29,7 +84,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-        ),
+        ),),
         body: SingleChildScrollView(
           child: Column(
             children: <Widget>[
@@ -120,17 +175,17 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
                         Image.asset(
-                          'assets/images/rain.png',
-                          color: Colors.blue,
+                          'assets/images/temperature.png',
+                          color: Colors.red,
                           height: 60.0,
                         ),
                             SizedBox(
                           height: 5.0,
                         ),
                         Text(
-                          'Rain',
+                          'Temperature',
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: Colors.red,
                           ),
                         )
                       ],
@@ -166,7 +221,7 @@ class _HomePageState extends State<HomePage> {
                   shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(30.0)),
                   onPressed: () {
-                   
+                   loadWeather();
                   },
                   color: Theme.of(context).primaryColor,
                   child: new Padding(
