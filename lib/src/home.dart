@@ -1,9 +1,9 @@
+import 'dart:convert';
+
 import 'package:canwashmycar/models/weatherData.dart';
 import 'package:canwashmycar/util/service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:location/location.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
@@ -12,57 +12,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-bool isLoading = false;
-Location _location = new Location();
-WeatherData weatherData;
+  bool isLoading = false;
 
- String error;
+  WeatherData weatherData;
 
-loadWeather() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    Map<String, double> location;
-
-    try {
-      location = (await _location.getLocation) as Map<String, double>;
-
-      error = null;
-    } catch (e) {
-      if (e.code == 'PERMISSION_DENIED') {
-        error = 'Permission denied';
-      } else if (e.code == 'PERMISSION_DENIED_NEVER_ASK') {
-        error = 'Permission denied - please ask the user to enable it from the app settings';
-      }
-
-      location = null;
-    }
-
-    if (location != null) {
-      final lat = location['latitude'];
-      final lon = location['longitude'];
-
-      final weatherResponse =  await http.get(
-          'https://api.openweathermap.org/data/2.5/weather?APPID=2ac4a2730c64fcd2dd7cec483c2d54d8&lat=$lat&lon=$lon');
-
-      if (weatherResponse.statusCode == 200) {
-        return setState(() {
-          weatherData = new WeatherData.fromJson(jsonDecode(weatherResponse.body));
-         
-          isLoading = false;
-        });
-      }
-    }
-
-    setState(() {
-      isLoading = false;
-    });
-  }
-
+  String error;
+  String wind = "- -";
+  String temp = "- -";
+  String humid = "- -";
+  String icon = "";
+  String tempDesc = "";
 
   @override
   Widget build(BuildContext context) {
+    this.getWeather();
     Size size = MediaQuery.of(context).size;
     return Scaffold(
         backgroundColor: Theme.of(context).primaryColorDark,
@@ -70,34 +33,32 @@ loadWeather() async {
           elevation: 0.0,
           backgroundColor: Theme.of(context).primaryColorDark,
           title: Center(
-            child:Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                "Hello Jesus",
-                style: TextStyle(
-                    fontSize: 22.0, 
-                    color: Colors.white, 
-                    letterSpacing: 2.0
-                    ),
-              ),
-            ],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  "Hello Jesus",
+                  style: TextStyle(
+                      fontSize: 22.0, color: Colors.white, letterSpacing: 2.0),
+                ),
+              ],
+            ),
           ),
-        ),),
+        ),
         body: SingleChildScrollView(
           child: Column(
             children: <Widget>[
-              Center(child: 
-              Row(
-                children: <Widget>[
-                  Image.asset(
-                    'assets/images/carwash.png',
-                    color: Colors.blue,
-                    width: MediaQuery.of(context).size.width / 1.2,
-                  ),
-                ],
-              ),
+              Center(
+                child: Row(
+                  children: <Widget>[
+                    Image.asset(
+                      'assets/images/carwash.png',
+                      color: Colors.blue,
+                      width: MediaQuery.of(context).size.width / 1.2,
+                    ),
+                  ],
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 20.0, bottom: 10.0),
@@ -109,10 +70,8 @@ loadWeather() async {
                       borderRadius: BorderRadius.all(Radius.circular(20.0))),
                   child: Row(
                     children: <Widget>[
-                      Image.asset(
-                        'assets/images/rain.png',
-                        color: Colors.white,
-                      ),
+                      Image.network(
+                          "http://openweathermap.org/img/wn/$icon@2x.png"),
                       Padding(
                         padding: const EdgeInsets.only(left: 12.0),
                         child: Column(
@@ -120,12 +79,12 @@ loadWeather() async {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              "DELIVERY",
+                             tempDesc,
                               style: TextStyle(
                                   color: Colors.white, fontSize: 20.0),
                             ),
                             Text(
-                              "D45 Amerlands",
+                             temp+" C\u00B0",
                               style: TextStyle(
                                   color: Colors.white, fontSize: 14.0),
                             ),
@@ -142,7 +101,7 @@ loadWeather() async {
                 ),
               ),
               Container(
-                height: size.height / 8,
+                height: size.height / 6,
                 width: size.width / 1.1,
                 decoration: BoxDecoration(
                     color: Color(0xFF212129),
@@ -167,6 +126,15 @@ loadWeather() async {
                           style: TextStyle(
                             color: Colors.cyanAccent,
                           ),
+                        ),
+                        SizedBox(
+                          height: 5.0,
+                        ),
+                        Text(
+                          wind + " km/h",
+                          style: TextStyle(
+                            color: Colors.cyanAccent,
+                          ),
                         )
                       ],
                     ),
@@ -179,11 +147,20 @@ loadWeather() async {
                           color: Colors.red,
                           height: 60.0,
                         ),
-                            SizedBox(
+                        SizedBox(
                           height: 5.0,
                         ),
                         Text(
                           'Temperature',
+                          style: TextStyle(
+                            color: Colors.red,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 5.0,
+                        ),
+                        Text(
+                          temp,
                           style: TextStyle(
                             color: Colors.red,
                           ),
@@ -199,11 +176,20 @@ loadWeather() async {
                           color: Colors.orange,
                           height: 60.0,
                         ),
-                            SizedBox(
+                        SizedBox(
                           height: 5.0,
                         ),
                         Text(
                           'Humidity',
+                          style: TextStyle(
+                            color: Colors.orange,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 5.0,
+                        ),
+                        Text(
+                          humid + "%",
                           style: TextStyle(
                             color: Colors.orange,
                           ),
@@ -213,16 +199,13 @@ loadWeather() async {
                   ],
                 ),
               ),
-              
               new Container(
                 width: size.width / 1.4,
                 padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
                 child: RaisedButton(
                   shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(30.0)),
-                  onPressed: () {
-                   loadWeather();
-                  },
+                  onPressed: () {this.getWeather();},
                   color: Theme.of(context).primaryColor,
                   child: new Padding(
                     padding: const EdgeInsets.all(15.0),
@@ -237,5 +220,27 @@ loadWeather() async {
             ],
           ),
         ));
+  }
+
+  getWeather()  {
+    var service = new Service();
+    WeatherData weatherData;
+    service.getLocation().then((response) async {
+      var lat = response.latitude;
+      var lon = response.longitude;
+      final weatherResponse = await http.get(
+          'https://api.openweathermap.org/data/2.5/weather?APPID=2ac4a2730c64fcd2dd7cec483c2d54d8&lat=$lat&lon=$lon&units=Metric&lang=es');
+      if (weatherResponse.statusCode == 200) {
+        weatherData =
+            new WeatherData.fromJson(jsonDecode(weatherResponse.body));
+        setState(() {
+          wind = weatherData.wind.speed.toString();
+          temp = weatherData.main.temp.toString();
+          humid = weatherData.main.humidity.toString();
+          icon = weatherData.weather[0].icon;
+          tempDesc = weatherData.weather[0].description;
+        });
+      }
+    });
   }
 }
