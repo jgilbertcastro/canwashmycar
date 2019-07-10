@@ -5,6 +5,7 @@ import 'package:canwashmycar/util/service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -229,18 +230,25 @@ class _HomePageState extends State<HomePage> {
       var lat = response.latitude;
       var lon = response.longitude;
       final weatherResponse = await http.get(
-          'https://api.openweathermap.org/data/2.5/weather?APPID=2ac4a2730c64fcd2dd7cec483c2d54d8&lat=$lat&lon=$lon&units=Metric&lang=es');
+          'https://api.openweathermap.org/data/2.5/forecast?appid=0a3b3150cfbf33fe52d6e42f8e4402bf&lat=18.5440218&lon=-69.9431227&units=Metric&mode=json&lang=es');
       if (weatherResponse.statusCode == 200) {
         weatherData =
             new WeatherData.fromJson(jsonDecode(weatherResponse.body));
-        setState(() {
-          wind = weatherData.wind.speed.toString();
+        canWashMyCar(weatherData);
+      }
+    });
+  }
+
+  canWashMyCar(WeatherData weatherData){
+    //var humid,temp,wind direction
+  var today = DateFormat.yMd().format(new DateTime.now());
+    var todayData = weatherData.list.where((w) => DateFormat.yMd().format(DateTime.parse(w.dtTxt)) == today);
+    setState(() {
+          /*wind = weatherData.speed.toString();
           temp = weatherData.main.temp.toString();
           humid = weatherData.main.humidity.toString();
           icon = weatherData.weather[0].icon;
-          tempDesc = weatherData.weather[0].description;
+          tempDesc = weatherData.weather[0].description;*/
         });
-      }
-    });
   }
 }
