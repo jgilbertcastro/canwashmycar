@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
                   child: Row(
                     children: <Widget>[
                       Image.network(
-                          "http://openweathermap.org/img/wn/$icon@2x.png"),
+                          "http://openweathermap.org/img/wn/10n@2x.png"),
                       Padding(
                         padding: const EdgeInsets.only(left: 12.0),
                         child: Column(
@@ -80,12 +80,12 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                             tempDesc,
+                              tempDesc,
                               style: TextStyle(
                                   color: Colors.white, fontSize: 20.0),
                             ),
                             Text(
-                             temp+" C\u00B0",
+                              temp + " C\u00B0",
                               style: TextStyle(
                                   color: Colors.white, fontSize: 14.0),
                             ),
@@ -206,7 +206,9 @@ class _HomePageState extends State<HomePage> {
                 child: RaisedButton(
                   shape: new RoundedRectangleBorder(
                       borderRadius: new BorderRadius.circular(30.0)),
-                  onPressed: () {this.getWeather();},
+                  onPressed: () {
+                    this.getWeather();
+                  },
                   color: Theme.of(context).primaryColor,
                   child: new Padding(
                     padding: const EdgeInsets.all(15.0),
@@ -223,7 +225,7 @@ class _HomePageState extends State<HomePage> {
         ));
   }
 
-  getWeather()  {
+  getWeather() {
     var service = new Service();
     WeatherData weatherData;
     service.getLocation().then((response) async {
@@ -239,16 +241,17 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  canWashMyCar(WeatherData weatherData){
+  canWashMyCar(WeatherData weatherData) {
     //var humid,temp,wind direction
-  var today = DateFormat.yMd().format(new DateTime.now());
-    var todayData = weatherData.list.where((w) => DateFormat.yMd().format(DateTime.parse(w.dtTxt)) == today);
+    var today = DateFormat.yMd().format(DateTime.parse(weatherData.list[0].dtTxt));
+    var todayData = weatherData.list.where((w) => DateFormat.yMd().format(DateTime.parse(w.dtTxt)).contains(today)).toList();
+   
     setState(() {
-          /*wind = weatherData.speed.toString();
-          temp = weatherData.main.temp.toString();
+      // wind = todayData
+      /*temp = weatherData.main.temp.toString();
           humid = weatherData.main.humidity.toString();
           icon = weatherData.weather[0].icon;
           tempDesc = weatherData.weather[0].description;*/
-        });
+    });
   }
 }
